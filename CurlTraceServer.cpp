@@ -218,30 +218,3 @@ if( create_tracePackage == "1")
 }
 
 
-// faire en sorte que les arguments qui donneront les analyses que le user veut lancer acceptent aussi des indices a deux chiffres en utilisant
-// des tableau de chaines de caractes ou bien listes au lieu de tableau de caractere
-
-//  completer la liste des data providers des autres analyses dans le config.h
-
-// regler ou regarder quoi faire pour les mesages d'erreur:
-// Error: File alread exists.
-//Error opening file.
-// qui s'affichent quand je relance l'analyse, which means les fichiers de archive data existent deja
-
-// voir si je garde l'archive file dans le server workspace ou je le change.
-
-// changer l'ordre des arguments que doit rentrer l'utilisateur: 1/traces_path  2/ analyses_indexes 3/create_archive ? 4/ path_to_trace_server_home  
-
-
-// Ajouter des descriptifs des fonctions comme dans le xmlWriter
-
-// mettre le tt dans le docker 
-
-// rendre le chemin vers le trace server relatif quand j'aurais tt mis dans le docker
-
-// tester ensuite sur une autre machine 
-
-// OS execution graph ou bien critical path analysis doit pouvoir etre lancee en batch elle aussi, penser a comment faire ca vu que elle 
-//prend un thread bien precis peut etre ?!
-
-// regarder si je garde les requested_times et requested_itmes tel quels ou pas
