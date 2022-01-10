@@ -14,7 +14,7 @@ bool XmlWriter::open(const std::string strFile) {
 
     outFile.open(strFile);
     if (outFile.is_open()) {
-        std::cout << "File created successfully.\n";
+        std::cout << "Xml file created.\n";
         indent = 0;
         openTags = 0;
         openElements = 0;

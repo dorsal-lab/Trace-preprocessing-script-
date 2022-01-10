@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <curl/curl.h>
 #include <json/json.h>
 #include <memory>
@@ -97,14 +98,41 @@ std::string curlRequest(const char *data, const char *mydata, const char *parsin
   return requestStatus;
 }
 
+/*
+ * This function will iterate through all the file lines and
+ * put them in given vector
+ */
+bool getFileContent(std::string fileName, std::vector<std::string> & vecOfStrs)
+{
+    // Open the File
+    std::ifstream in(fileName.c_str());
+    // Check if object is valid
+    if(!in)
+    {
+        std::cerr << "Cannot open the File : "<<fileName<<std::endl;
+        return false;
+    }
+    std::string str;
+    // Read the next line from File untill it reaches the end.
+    while (std::getline(in, str))
+    {
+        // Line contains string of length > 0 then save it in vector
+        if(str.size() > 0)
+            vecOfStrs.push_back(str);
+    }
+    //Close The File
+    in.close();
+    return true;
+}
+
+
 int main(int argc, char **argv)
 {
   std::string traces_path = argv[1];
   std::string trace_server_workspace = argv[2];
   std::string create_tracePackage = argv[3];
   std::string str_analyses_indexes = argv[4];
-
-
+  
   std::vector<int> int_analyses_indexes;
   char char_array[str_analyses_indexes.size()];
   strcpy(char_array, str_analyses_indexes.c_str());
@@ -121,21 +149,26 @@ int main(int argc, char **argv)
 
   // Checking if the server is alive
   ServerHealth();
-  //Posting the traces on the trace-server
 
+  //getting the list of the traces from the main folder given by the user
+  std::string shell = "./findTraces.sh";
+  std::string command = shell + " " + traces_path;
+  std::system(command.c_str());
 
-
-
-  std::vector<std::string> traces = getDirectories(traces_path.c_str());
+  std::vector<std::string> traces;
+  std::string fileName = traces_path + "/file.txt";
+  // Get the contents of file in a vector
+  bool result = getFileContent(fileName, traces);
+  remove(fileName.c_str());
   std::string uuids = "\"";
   const char *data = "";
   std::string s = "";
 
 
-
+  //Posting the traces on the trace-server
   for (int i = 0; i < traces.size(); i++)
   {
-    std::string s = "{\"parameters\":{\"uri\": \"" + traces_path + "/" + traces[i] + "/kernel\",\"name\": \"" + "kernel" + "\"}}";
+    std::string s = "{\"parameters\":{\"uri\": \"" + traces[i] + "\",\"name\": \"" + "kernel" + "\"}}";
     data = s.c_str();
 
     const std::string uuid = curlRequest(data, "http://0.0.0.0:8080/tsp/api/traces", "UUID");
@@ -148,7 +181,7 @@ int main(int argc, char **argv)
   std::cout << "uuids= " + uuids << std::endl;
 
   //Creating the experiment
-  s = "{\"parameters\":{\"name\": \"LoveExp\",\"traces\": [" + uuids + "]}}";
+  s = "{\"parameters\":{\"name\": \"theExperiment\",\"traces\": [" + uuids + "]}}";
   const std::string expUuid = curlRequest(s.c_str(), "http://0.0.0.0:8080/tsp/api/experiments", "UUID");
   std::cout << "Experiment UUID: " << expUuid << std::endl;
 
@@ -216,5 +249,3 @@ if( create_tracePackage == "1")
 }
   return 0;
 }
-
-

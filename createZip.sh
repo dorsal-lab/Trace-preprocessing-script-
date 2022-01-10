@@ -7,5 +7,5 @@ echo $traceServerHome/archiveData
 # Cleaning: 
 # deleting directories
 find -mindepth 1 -maxdepth 1 -type d -exec rm -r {} \;
-# # deleting files except the zip file
+# deleting files except the zip file
 find . -type f ! -name '*.zip' -delete

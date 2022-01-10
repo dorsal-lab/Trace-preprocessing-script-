@@ -84,7 +84,7 @@ void CreateExportManifestXml(std::string TRACE_SERVER_WORKSPACE)
         }
         xml.writeCloseTag(); // tmf-export
         xml.close();
-        std::cout << "Success!\n";
+        std::cout << "\"export-manifest.xml\" file created successfully!\n";
     }
     else
     {
