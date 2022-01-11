@@ -12,7 +12,7 @@ In order to use this script, you should make sure of having the following depend
 Before running the script, the trace-server should be started at its default port 8080. To do so, if you already have a trace-server package on your machine, you can go to its main folder and open a terminal from there, and then run the following command:
 
 ```
-$ ./tracecompass-server
+./tracecompass-server
 ```
 
 If you do not have a trace-server package, You can get a one by either building your own version, or just downloading it from [this link](https://download.eclipse.org/tracecompass.incubator/trace-server/rcp/).
@@ -21,13 +21,13 @@ To build a trace-server, you may do what follows:
 1. Clone the trace Compass incubator repository using:
 
 ```
-$ git clone https://git.eclipse.org/r/tracecompass.incubator/org.eclipse.tracecompass.incubator
+git clone https://git.eclipse.org/r/tracecompass.incubator/org.eclipse.tracecompass.incubator
 ```
 
 2. From the incubator folder, open a terminal and start the `mvn` build with:
 
 ```
-$ mvn clean install -DskipTests=true
+mvn clean install -DskipTests=true
 ```
 
 3. Once the build completes, you will find your trace-server ready for use under the folder:
@@ -40,8 +40,8 @@ org.eclipse.tracecompass.incubator/trace-server/org.eclipse.tracecompass.incubat
 **- libcurl4-openssl-dev package :** libcurl is an easy-to-use client-side URL transfer library, this package provides the development files  that will allow you to build the script. It can be installed by executing the following commands:
 
 ```  
-$ sudo apt-get update 
-$ sudo apt-get install libcurl4-openssl-dev
+sudo apt-get update 
+sudo apt-get install libcurl4-openssl-dev
 ```
 
 
@@ -49,10 +49,16 @@ $ sudo apt-get install libcurl4-openssl-dev
 
 *libjsoncpp-dev* can be installed by using the following commands:
 ```
-$ sudo apt-get install libjsoncpp-dev
-$ sudo ln -s /usr/include/jsoncpp/json/ /usr/include/json
+sudo apt-get install libjsoncpp-dev
+sudo ln -s /usr/include/jsoncpp/json/ /usr/include/json
 ```
 
+**- g++:**
+It can be installed using the command below:
+
+```  
+sudo apt install g++ 
+```
 
 ## Usage
 First, you need to build the project using the following command:
