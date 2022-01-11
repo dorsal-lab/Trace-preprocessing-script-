@@ -8,7 +8,7 @@ This script allows the preprocessing of a trace or a group of traces in order to
 
 In order to use this script, you should make sure of having the following dependencies:
 
-**- The trace-server:** 
+**- The Trace Compass Server:** 
 Before running the script, the trace-server should be started at its default port 8080. To do so, if you already have a trace-server package on your machine, you can go to its main folder and open a terminal from there, and then run the following command:
 
 ```
@@ -36,6 +36,11 @@ mvn clean install -DskipTests=true
 org.eclipse.tracecompass.incubator/trace-server/org.eclipse.tracecompass.incubator.trace.server.product/target/products/traceserver/linux/gtk/x86_64/trace-compass-server
 ```
 
+**- JAVA 11 OpenJDK:**
+The Trace Compass Server requires Java 11 that you can install using:
+```  
+sudo apt install openjdk-11-jre-headless
+```
 
 **- libcurl4-openssl-dev package :** libcurl is an easy-to-use client-side URL transfer library, this package provides the development files  that will allow you to build the script. It can be installed by executing the following commands:
 
