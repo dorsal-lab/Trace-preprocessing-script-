@@ -5,7 +5,7 @@
 #leaving just the directory name. Then, the list of directories  is sorted (sort) and  duplicates are 
 #removed with (uniq). The result is written then into a text file using (tee).
 traces_folder=$1
-find $traces_folder -type f -name 'metadata' | sed -r 's|/[^/]+$||' |sort |uniq | tee $traces_folder/file.txt
+find $traces_folder -type f -name 'metadata' | sed -r 's|/[^/]+$||' |sort |uniq | tee $traces_folder/file.txt > /dev/null
 
 
 

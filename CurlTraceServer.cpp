@@ -200,7 +200,7 @@ int main(int argc, char **argv)
   {
     if (data_providers.size() > 0 && int_analyses_indexes[i] < data_providers.size())
     {
-      const std::string mystr = "http://localhost:8080/tsp/api/experiments/" + expUuid + data_providers[i];
+      const std::string mystr = "http://localhost:8080/tsp/api/experiments/" + expUuid + data_providers[int_analyses_indexes[i]];
       s = "{\"parameters\":{\"requested_times\":" + requested_times + "," + "\"requested_items\":" + requested_items + "}}";
       data = s.c_str();
       const char *mydata = mystr.c_str();
@@ -209,7 +209,7 @@ int main(int argc, char **argv)
       {
         std::cout << "Request Updated Status = " << status << "\n";
         status = curlRequest(data, mydata, "status");
-        usleep(1000000); // 1s
+        usleep(30000000); // 30s, this sleep time is needed to avoid parsing errors
       }
       std::cout << "Request Updated Status = " << status << "\n";
     }
