@@ -98,31 +98,23 @@ std::string curlRequest(const char *data, const char *mydata, const char *parsin
   return requestStatus;
 }
 
-/*
- * This function will iterate through all the file lines and
- * put them in given vector
- */
-bool getFileContent(std::string fileName, std::vector<std::string> & vecOfStrs)
+std::vector<std::string> execute(const char *cmd)
 {
-    // Open the File
-    std::ifstream in(fileName.c_str());
-    // Check if object is valid
-    if(!in)
-    {
-        std::cerr << "Cannot open the File : "<<fileName<<std::endl;
-        return false;
-    }
-    std::string str;
-    // Read the next line from File untill it reaches the end.
-    while (std::getline(in, str))
-    {
-        // Line contains string of length > 0 then save it in vector
-        if(str.size() > 0)
-            vecOfStrs.push_back(str);
-    }
-    //Close The File
-    in.close();
-    return true;
+  std::array<char, 255> buffer;
+  std::vector<std::string> result;
+  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+  if (!pipe)
+  {
+    throw std::runtime_error("popen() failed!");
+  }
+  while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
+  {
+    std::string str = buffer.data();
+    //Removing the endline from the string
+    str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
+    result.push_back(str);
+  }
+  return result;
 }
 
 
@@ -151,15 +143,9 @@ int main(int argc, char **argv)
   ServerHealth();
 
   //getting the list of the traces from the main folder given by the user
-  std::string shell = "./findTraces.sh";
-  std::string command = shell + " " + traces_path;
-  std::system(command.c_str());
-
-  std::vector<std::string> traces;
-  std::string fileName = traces_path + "/file.txt";
-  // Get the contents of file in a vector
-  bool result = getFileContent(fileName, traces);
-  remove(fileName.c_str());
+  std::string cmd = "find " + traces_path + " -type f -name 'metadata' | sed -r 's|/[^/]+$||' |sort |uniq";
+  std::vector<std::string> traces = execute(cmd.c_str());
+  
   std::string uuids = "\"";
   const char *data = "";
   std::string s = "";
