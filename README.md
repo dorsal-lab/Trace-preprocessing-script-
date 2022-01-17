@@ -66,23 +66,19 @@ sudo apt install g++
 ```
 
 ## Usage
-First, you need to build the project using the following command:
-
-```
-g++ CurlTraceServer.cpp xmlWriter/XmlWriter.cpp xmlWriter/ExportManifestXml.cpp -ljsoncpp -lcurl -o pp_script.out
-```
+First, you need to build the project with a `make` command, this will create an executable file called **preprocessor**. If you wish to clean the old executables, you can perform a `make clean` command before that.
 
 then, you can launch the script with the necessary arguments as follows:
 ```
-./pp_script.out  /Path_to_the_traces_directory/  /Path_to_the_trace-server_workspace 0 [0,1,2]
+./preprocessor  /Path_to_the_traces_directory/  /Path_to_the_trace-server_workspace [0,1,2]
 ```
 
-As you can see, you should enter 4 arguments:
+As you can see, you should enter at least 3 arguments:
 
-1. The absolute path to the traces folder 
-2. The absolute path to the trace-server workspace that may look like: `/home/ubuntu/.tracecompass-webapp`
-3. A parameter that you should set to 1 if you want to create a trace Package, you can set it to 0 otherwise.
-4. An array giving the indexes of the different analyses you want to preprocess. The numbers should be separated with comma's. For example to run the analyses corresponding to the indexes 0, 1 and 3 in the "config.h" file of the project, you may use this array: [0,1,3]. If you want to do the indexing with no additional analyses, you can use an empty array. In order to find the index of a specific analysis (data provider), you can have a look at the "config.h" file. Alternatively, you can use the table below. More analysis will be added.
+1. The path to the traces folder 
+2. The path to the trace-server workspace that may look like: `/home/ubuntu/.tracecompass-webapp`
+3. An array giving the indexes of the different analyses you want to preprocess. The numbers should be separated with comma's. For example to run the analyses corresponding to the indexes 0, 1 and 3 in the "config.h" file of the project, you may use this array: [0,1,3]. If you want to do the indexing with no additional analyses, you can use an empty array. In order to find the index of a specific analysis (data provider), you can have a look at the "config.h" file. Alternatively, you can use the table below. More analysis will be added.
+4. If you want to create a trace Package, you can optionally add a "-p" or "--package" argument at the end. 
 
 | Analyis             | Index  |
 | ------------------- | -----  |
@@ -114,5 +110,6 @@ You should be able to see your traces from the **Project Explorer** of Trace Com
 
 #### Option 3: Importing a trace Package into Trace Compass
 If you put the third argument at 1, you have already created a Trace Package containing all the analyses files and that you may import to Trace Compass by following the steps explained in [this page](https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.user/Trace-Compass-Main-Features.html#Importing_2).
+
 
 
