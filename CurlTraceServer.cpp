@@ -11,6 +11,8 @@
 #include "config.h"
 #include <list>
 #include <unistd.h>
+#include <limits.h>
+#include <stdlib.h>
 #include "xmlWriter/ExportManifestXml.h"
 
 namespace
@@ -62,6 +64,29 @@ void ServerHealth()
       std::cout << "Error: Failed to connect to the trace-server" << std::endl;
       exit(EXIT_FAILURE);
     }
+  }
+}
+
+void verifyPath(std::string path)
+{
+  DIR *dir = opendir(path.c_str());
+  if (dir)
+  {
+    /* Directory exists. */
+  }
+  else if (ENOENT == errno)
+  {
+    /* Directory does not exist. */
+    std::cout << "Error! The directory: \n"
+              << path << "\ndoes not exist"
+              << "\n";
+    exit(EXIT_FAILURE);
+  }
+  else
+  {
+    std::cout << "Error! Failed to open the directory: \n"
+              << path << "\n";
+    exit(EXIT_FAILURE);
   }
 }
 
@@ -117,26 +142,38 @@ std::vector<std::string> execute(const char *cmd)
   return result;
 }
 
-
 int main(int argc, char **argv)
 {
-  std::string traces_path = argv[1];
-  std::string trace_server_workspace = argv[2];
-  std::string create_tracePackage = argv[3];
-  std::string str_analyses_indexes = argv[4];
-  
-  std::vector<int> int_analyses_indexes;
-  char char_array[str_analyses_indexes.size()];
-  strcpy(char_array, str_analyses_indexes.c_str());
-  for (int i=1; i < str_analyses_indexes.size()-1 ; i+=2 )
-  {
-    int_analyses_indexes.push_back((int)char_array[i] - 48); /* in ASCII code, the digits start from 48 */
-    }
-
-  if(argc < 3)
+  if (argc < 3)
   {
     std::cout << "Error: there are missing arguments, the program can not run properly \n";
     return EXIT_FAILURE;
+  }
+  char resolved_path[PATH_MAX];
+  verifyPath(argv[1]);
+  realpath(argv[1], resolved_path);
+  std::string traces_path = resolved_path;
+  verifyPath(argv[2]);
+  realpath(argv[2], resolved_path);
+  std::string trace_server_workspace = resolved_path;
+  std::string str_analyses_indexes = argv[3];
+  std::string create_tracePackage;
+
+  if (argv[4] != NULL)
+  {
+    create_tracePackage = argv[4];
+    if (create_tracePackage != "-p" && create_tracePackage != "--package")
+      std::cout << "Error: No argument matches \"" + create_tracePackage + "\". Only \"-p\" or \"--package\" are supported. \n";
+  }
+  else
+    create_tracePackage = "null";
+
+  std::vector<int> int_analyses_indexes;
+  char char_array[str_analyses_indexes.size()];
+  strcpy(char_array, str_analyses_indexes.c_str());
+  for (int i = 1; i < str_analyses_indexes.size() - 1; i += 2)
+  {
+    int_analyses_indexes.push_back(std::atoi(&char_array[i]));
   }
 
   // Checking if the server is alive
@@ -145,11 +182,10 @@ int main(int argc, char **argv)
   //getting the list of the traces from the main folder given by the user
   std::string cmd = "find " + traces_path + " -type f -name 'metadata' | sed -r 's|/[^/]+$||' |sort |uniq";
   std::vector<std::string> traces = execute(cmd.c_str());
-  
+
   std::string uuids = "\"";
   const char *data = "";
   std::string s = "";
-
 
   //Posting the traces on the trace-server
   for (int i = 0; i < traces.size(); i++)
@@ -203,35 +239,17 @@ int main(int argc, char **argv)
       std::cout << "Invalid required analyses values" << std::endl;
   }
 
-if( create_tracePackage == "1")
-{
-    DIR *dir = opendir(trace_server_workspace.c_str());
-    if (dir)
-    {
-        /* Directory exists. */
-    }
-    else if (ENOENT == errno)
-    {
-        /* Directory does not exist. */
-        std::cout << "The directory: \n" << trace_server_workspace << "\n does not exist" << "\n";
-        exit(EXIT_FAILURE);
+  if (create_tracePackage == "-p" || create_tracePackage == "--package")
+  {
+    std::string shell = "./copyingData.sh";
+    std::string command = shell + " " + traces_path + " " + trace_server_workspace;
+    std::system(command.c_str());
 
-    }
-    else
-    {
-        std::cout << "Failed to open the directory: \n" << trace_server_workspace << "\n";
-        exit(EXIT_FAILURE);
-    }
-
-  std::string shell = "./copyingData.sh";
-  std::string command = shell + " " + traces_path + " " + trace_server_workspace;
-  std::system(command.c_str());
-
-  CreateExportManifestXml(trace_server_workspace);
-  // Creating the trace package (zip file)
-  shell = "./createZip.sh";
-  command = shell + " " + trace_server_workspace;
-  system(command.c_str());
-}
+    CreateExportManifestXml(trace_server_workspace);
+    // Creating the trace package (zip file)
+    shell = "./createZip.sh";
+    command = shell + " " + trace_server_workspace;
+    system(command.c_str());
+  }
   return 0;
 }

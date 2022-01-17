@@ -1,7 +1,7 @@
 #!/bin/sh
 traceServerHome=$1
 cd $traceServerHome/archiveData
-zip TracePackage.zip -r ./
+zip TracePackage_$(date +"%Y_%m_%d_%I_%M_%p").zip -r ./
 echo Trace package created at:
 echo $traceServerHome/archiveData
 # Cleaning: 
