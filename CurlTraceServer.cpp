@@ -15,43 +15,65 @@
 #include <stdlib.h>
 #include "xmlWriter/ExportManifestXml.h"
 
-namespace
+struct MemoryStruct
 {
-  std::size_t callback(
-      const char *in,
-      std::size_t size,
-      std::size_t num,
-      std::string *out)
+  char *memory;
+  size_t size;
+};
+
+static size_t
+WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
+{
+  size_t realsize = size * nmemb;
+  struct MemoryStruct *mem = (struct MemoryStruct *)userp;
+
+  char *ptr = (char *)realloc(mem->memory, mem->size + realsize + 1);
+  if (!ptr)
   {
-    const std::size_t totalBytes(size * num);
-    out->append(in, totalBytes);
-    return totalBytes;
+    /* out of memory! */
+    printf("not enough memory (realloc returned NULL)\n");
+    return 0;
   }
+
+  mem->memory = ptr;
+  memcpy(&(mem->memory[mem->size]), contents, realsize);
+  mem->size += realsize;
+  mem->memory[mem->size] = 0;
+
+  return realsize;
 }
 
 void ServerHealth()
 {
-  CURL *curl;
+  CURL *curl_handle;
   CURLcode res;
-  curl = curl_easy_init();
-  if (curl)
+  struct MemoryStruct chunk;
+  chunk.memory = (char *)malloc(1); /* will be increased by realloc */
+  chunk.size = 0;
+  curl_global_init(CURL_GLOBAL_ALL);
+  curl_handle = curl_easy_init();
+  curl_easy_setopt(curl_handle, CURLOPT_CUSTOMREQUEST, "GET");
+  curl_easy_setopt(curl_handle, CURLOPT_URL, "http://0.0.0.0:8080/tsp/api/health");
+  curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
+  curl_easy_setopt(curl_handle, CURLOPT_DEFAULT_PROTOCOL, "https");
+  struct curl_slist *headers = NULL;
+  headers = curl_slist_append(headers, "Content-Type: application/json");
+  curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, headers);
+  Json::Value jsonData;
+  Json::Reader jsonReader;
+  long httpCode(0);
+  std::unique_ptr<std::string> httpData(new std::string());
+  curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+  curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
+  res = curl_easy_perform(curl_handle);
+  if (res != CURLE_OK)
   {
-    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
-    curl_easy_setopt(curl, CURLOPT_URL, "http://0.0.0.0:8080/tsp/api/health");
-    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-    curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, "https");
-    struct curl_slist *headers = NULL;
-    headers = curl_slist_append(headers, "Content-Type: application/json");
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-    Json::Value jsonData;
-    Json::Reader jsonReader;
-    long httpCode(0);
-    std::unique_ptr<std::string> httpData(new std::string());
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, httpData.get());
-    res = curl_easy_perform(curl);
+    fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+  }
+  else
+  {
     std::string serverHealthStatus = "DOWN";
-    if (jsonReader.parse(*httpData.get(), jsonData))
+    if (jsonReader.parse(chunk.memory, jsonData))
     {
       const std::string serverHealth(jsonData["status"].asString());
       serverHealthStatus = serverHealth;
@@ -92,34 +114,65 @@ void verifyPath(std::string path)
 
 std::string curlRequest(const char *data, const char *mydata, const char *parsingKey)
 {
-  CURL *curl;
+  CURL *curl_handle;
   CURLcode res;
   std::string requestStatus = "No data available";
-  curl = curl_easy_init();
-  if (curl)
+  struct MemoryStruct chunk;
+
+  chunk.memory = (char *)malloc(1); /* will be increased by realloc */
+  chunk.size = 0;
+  curl_global_init(CURL_GLOBAL_ALL);
+
+  /* init the curl session */
+  curl_handle = curl_easy_init();
+
+  /* specifying URL to get */
+  curl_easy_setopt(curl_handle, CURLOPT_CUSTOMREQUEST, "POST");
+  curl_easy_setopt(curl_handle, CURLOPT_URL, mydata);
+  curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, data);
+  curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
+  curl_easy_setopt(curl_handle, CURLOPT_DEFAULT_PROTOCOL, "https");
+
+  /* adding json headers */
+  struct curl_slist *headers = NULL;
+  headers = curl_slist_append(headers, "Content-Type: application/json");
+  curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, headers);
+  Json::Value jsonData;
+  Json::Reader jsonReader;
+  long httpCode(0);
+
+  /* send all data to this function  */
+  curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+
+  /* passing 'chunk' struct to the callback function */
+  curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
+
+  /* providing user-agent field */
+  curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+  res = curl_easy_perform(curl_handle);
+
+  /* checking for errors */
+  if (res != CURLE_OK)
   {
-    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
-    curl_easy_setopt(curl, CURLOPT_URL, mydata);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
-    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-    curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, "https");
-    struct curl_slist *headers = NULL;
-    headers = curl_slist_append(headers, "Content-Type: application/json");
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-    Json::Value jsonData;
-    Json::Reader jsonReader;
-    long httpCode(0);
-    std::unique_ptr<std::string> httpData(new std::string());
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, httpData.get());
-    res = curl_easy_perform(curl);
-    if (jsonReader.parse(*httpData.get(), jsonData))
+    fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+  }
+  else
+  {
+    if (jsonReader.parse(chunk.memory, jsonData))
     {
       std::cout << jsonData.toStyledString() << std::endl;
       const std::string request_Status(jsonData[parsingKey].asString());
       requestStatus = request_Status;
     }
+    else
+      std::cout << "An error happened during parsing" << std::endl;
   }
+
+  /* cleanup */
+  curl_easy_cleanup(curl_handle);
+  free(chunk.memory);
+  curl_global_cleanup();
+
   return requestStatus;
 }
 
@@ -213,7 +266,7 @@ int main(int argc, char **argv)
   {
     std::cout << "Indexing Updated Status = " << indexingStatus << "\n";
     indexingStatus = curlRequest(s.c_str(), "http://0.0.0.0:8080/tsp/api/experiments", "indexingStatus");
-    usleep(1000000); // 1s
+    usleep(1000000); /* adding 1s sleep to reduce the polling request frequency  */
   }
   std::cout << "Indexing Updated Status = " << indexingStatus << "\n";
 
@@ -231,7 +284,7 @@ int main(int argc, char **argv)
       {
         std::cout << "Request Updated Status = " << status << "\n";
         status = curlRequest(data, mydata, "status");
-        usleep(30000000); // 30s, this sleep time is needed to avoid parsing errors
+        usleep(1000000); /* adding 1s sleep to reduce the polling request frequency  */
       }
       std::cout << "Request Updated Status = " << status << "\n";
     }
