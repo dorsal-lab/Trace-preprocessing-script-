@@ -160,12 +160,11 @@ std::string curlRequest(const char *data, const char *mydata, const char *parsin
   {
     if (jsonReader.parse(chunk.memory, jsonData))
     {
-      std::cout << jsonData.toStyledString() << std::endl;
       const std::string request_Status(jsonData[parsingKey].asString());
       requestStatus = request_Status;
     }
     else
-      std::cout << "An error happened during parsing" << std::endl;
+      std::cout << "An error happened during parsing: \n" <<  jsonReader.getFormattedErrorMessages() << std::endl;
   }
 
   /* cleanup */
@@ -253,28 +252,30 @@ int main(int argc, char **argv)
       uuids = uuids + uuid + "\"";
   }
 
-  std::cout << "uuids= " + uuids << std::endl;
-
   //Creating the experiment
   s = "{\"parameters\":{\"name\": \"theExperiment\",\"traces\": [" + uuids + "]}}";
   const std::string expUuid = curlRequest(s.c_str(), "http://0.0.0.0:8080/tsp/api/experiments", "UUID");
-  std::cout << "Experiment UUID: " << expUuid << std::endl;
+  std::cout << "\nINDEXING STARTED: \n";
+  std::cout << "INDEXING STATUS = RUNNING ... \n";
+
 
   // Waiting for indexing to complete
   std::string indexingStatus = "";
   while (indexingStatus.compare("COMPLETED") != 0)
   {
-    std::cout << "Indexing Updated Status = " << indexingStatus << "\n";
     indexingStatus = curlRequest(s.c_str(), "http://0.0.0.0:8080/tsp/api/experiments", "indexingStatus");
     usleep(1000000); /* adding 1s sleep to reduce the polling request frequency  */
   }
-  std::cout << "Indexing Updated Status = " << indexingStatus << "\n";
+  std::cout << "INDEXING STATUS = " + indexingStatus + "\n";
 
   //Lanching the desired analysis via their data providers and waiting for them to complete
   for (int i = 0; i < int_analyses_indexes.size(); i++)
   {
     if (data_providers.size() > 0 && int_analyses_indexes[i] < data_providers.size())
     {
+      std::cout << "\nANALYSIS COMPUTING STARTED: " + analysis_names[int_analyses_indexes[i]] + "\n";
+      std::cout << "ANALYSIS STATUS = RUNNING ... \n";
+
       const std::string mystr = "http://localhost:8080/tsp/api/experiments/" + expUuid + data_providers[int_analyses_indexes[i]];
       s = "{\"parameters\":{\"requested_times\":" + requested_times + "," + "\"requested_items\":" + requested_items + "}}";
       data = s.c_str();
@@ -282,27 +283,29 @@ int main(int argc, char **argv)
       std::string status = "";
       while (status.compare("COMPLETED") != 0)
       {
-        std::cout << "Request Updated Status = " << status << "\n";
         status = curlRequest(data, mydata, "status");
         usleep(1000000); /* adding 1s sleep to reduce the polling request frequency  */
       }
-      std::cout << "Request Updated Status = " << status << "\n";
+      std::cout << "ANALYSIS STATUS = " + status + "\n";
     }
     else
       std::cout << "Invalid required analyses values" << std::endl;
   }
 
   if (create_tracePackage == "-p" || create_tracePackage == "--package")
-  {
+  {    
+    // Creating the trace package (zip file)
+    std::cout << "\nCREATING THE TRACE PACKAGE ...\n";
     std::string shell = "./copyingData.sh";
     std::string command = shell + " " + traces_path + " " + trace_server_workspace;
     std::system(command.c_str());
 
     CreateExportManifestXml(trace_server_workspace);
-    // Creating the trace package (zip file)
     shell = "./createZip.sh";
     command = shell + " " + trace_server_workspace;
     system(command.c_str());
+    std::cout << "TRACE PACKAGE CREATED AT: " + trace_server_workspace + "/archiveData" + "\n";
+
   }
   return 0;
 }

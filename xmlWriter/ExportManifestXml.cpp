@@ -11,7 +11,8 @@ std::vector<std::string> getDirectories(const char *PATH)
     else if (ENOENT == errno)
     {
         /* Directory does not exist. */
-        std::cout << "The directory: \n" + myPATH + "\n does not exist" << "\n";
+        std::cout << "The directory: \n" + myPATH + "\n does not exist"
+                  << "\n";
     }
     else
     {
@@ -59,32 +60,57 @@ void CreateExportManifestXml(std::string TRACE_SERVER_WORKSPACE)
             std::string directory_path = SUPP_FILES_PATH + "/" + main_directories[i];
             std::vector<std::string> sub_directories = getDirectories(directory_path.c_str());
 
-            for (int j = 0; j < sub_directories.size(); j++)
+            // if sub_directories.size() > 0  we enter the for loop (we have )
+
+            if (sub_directories.size() < 1) // we have only one trace
             {
-                std::string sub_directory_path = directory_path + "/" + sub_directories[j];
-                std::vector<std::string> sub_directory_files = getFiles(sub_directory_path.c_str());
+                std::vector<std::string> sub_directory_files = getFiles(directory_path.c_str());
 
                 xml.writeStartOpenTag("trace");
-                xml.writeAttribute("name=\"" + sub_directories[j] + "\"");
+                xml.writeAttribute("name=\"" + main_directories[i] + "\"");
                 xml.writeAttribute("type=\"org.eclipse.linuxtools.lttng2.kernel.tracetype\"");
                 xml.writeEndOpenTag();
 
                 xml.writeStartElementTag("file");
-                xml.writeAttribute("name=\"" + main_directories[i] + "/" + sub_directories[j] + "\"");
+                xml.writeAttribute("name=\"" + main_directories[i] + "\"");
                 xml.writeEndElementTag();
 
                 for (int k = 0; k < sub_directory_files.size(); k++)
                 {
                     xml.writeStartElementTag("supplementary-file");
-                    xml.writeAttribute("name=\".tracing/" + main_directories[i] + "/" + sub_directories[j] + "/" + sub_directory_files[k] + "\"");
+                    xml.writeAttribute("name=\".tracing/" + main_directories[i] + "/" + sub_directory_files[k] + "\"");
                     xml.writeEndElementTag();
                 }
                 xml.writeCloseTag();
             }
+            else
+            { 
+                for (int j = 0; j < sub_directories.size(); j++)
+                {
+                    std::string sub_directory_path = directory_path + "/" + sub_directories[j];
+                    std::vector<std::string> sub_directory_files = getFiles(sub_directory_path.c_str());
+
+                    xml.writeStartOpenTag("trace");
+                    xml.writeAttribute("name=\"" + sub_directories[j] + "\"");
+                    xml.writeAttribute("type=\"org.eclipse.linuxtools.lttng2.kernel.tracetype\"");
+                    xml.writeEndOpenTag();
+
+                    xml.writeStartElementTag("file");
+                    xml.writeAttribute("name=\"" + main_directories[i] + "/" + sub_directories[j] + "\"");
+                    xml.writeEndElementTag();
+
+                    for (int k = 0; k < sub_directory_files.size(); k++)
+                    {
+                        xml.writeStartElementTag("supplementary-file");
+                        xml.writeAttribute("name=\".tracing/" + main_directories[i] + "/" + sub_directories[j] + "/" + sub_directory_files[k] + "\"");
+                        xml.writeEndElementTag();
+                    }
+                    xml.writeCloseTag();
+                }
+            }
         }
         xml.writeCloseTag(); // tmf-export
         xml.close();
-        std::cout << "\"export-manifest.xml\" file created successfully!\n";
     }
     else
     {

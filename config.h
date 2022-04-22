@@ -8,6 +8,10 @@ std::vector<std::string> data_providers = {"/outputs/timeGraph/org.eclipse.trace
                                            "/outputs/XY/org.eclipse.tracecompass.analysis.os.linux.core.kernelmemoryusage/tree",
                                            "/outputs/XY/org.eclipse.tracecompass.internal.analysis.timing.core.segmentstore.scatter.dataprovider:org.eclipse.tracecompass.analysis.os.linux.latency.syscall/tree"};
 
+std::vector<std::string> analysis_names = {"Kernel Analysis",
+                                           "Cpu Usage Analysis",
+                                           "Kernel Memory Usage Analysis",
+                                           "Latency Syscall Analysis"};
 std::string requested_times = "[ ]";
 std::string requested_items = "[ ]";
 
