@@ -5,21 +5,20 @@ bool XmlWriter::exists(const std::string fileName){
     return checkFile.is_open();
 }
 
-bool XmlWriter::open(const std::string strFile) {
+bool XmlWriter::open(const std::string file) {
 
-    if (exists(strFile)){
+    if (exists(file)){
         std::cout << "Error: File alread exists.\n";
         return false;
     }
 
-    outFile.open(strFile);
+    outFile.open(file);
     if (outFile.is_open()) {
         indent = 0;
         openTags = 0;
         openElements = 0;
         return true;
     }
-
     return false;
 }
 
@@ -30,7 +29,6 @@ void XmlWriter::close() {
     else {
         std::cout << "File already closed.\n";
     }
-
 }
 
 void XmlWriter::writeOpenTag(const std::string openTag) {
@@ -45,7 +43,7 @@ void XmlWriter::writeOpenTag(const std::string openTag) {
         openTags += 1;
     }
     else {
-        std::cout << "File is closed. Unable to write to file.\n";
+        std::cout << "Error: unable to write to a closed file.\n";
     }
 }
 
@@ -62,7 +60,7 @@ void XmlWriter::writeStartOpenTag(const std::string openTag) {
         openTags += 1;
     }
     else {
-        std::cout << "File is closed. Unable to write to file.\n";
+        std::cout << "Error: unable to write to a closed file.\n";
     }
 }
 
@@ -71,7 +69,7 @@ void XmlWriter::writeEndOpenTag() {
         outFile << " >\n";
     }
     else {
-        std::cout << "File is closed. Unable to write to file.\n";
+        std::cout << "Error: unable to write to a closed file.\n";
     }
 }
 
@@ -86,7 +84,7 @@ void XmlWriter::writeCloseTag() {
         openTags -= 1;
     }
     else {
-        std::cout << "File is closed. Unable to write to file.\n";
+        std::cout << "Error: unable to write to a closed file.\n";
     }
 }
 
@@ -101,7 +99,7 @@ void XmlWriter::writeStartElementTag(const std::string elementTag) {
         outFile << "<" << elementTag;
     }
     else {
-        std::cout << "File is closed. Unable to write to file.\n";
+        std::cout << "Error: unable to write to a closed file.\n";
     }
 }
 
@@ -113,7 +111,7 @@ void XmlWriter::writeEndElementTag() {
         openElements -= 1;
     }
     else {
-        std::cout << "File is closed. Unable to write to file.\n";
+        std::cout << "Error: unable to write to a closed file.\n";
     }
 }
 
@@ -122,15 +120,6 @@ void XmlWriter::writeAttribute(const std::string outAttribute) {
         outFile << " " << outAttribute;
     }
     else {
-        std::cout << "File is closed. Unable to write to file.\n";
-    }
-}
-
-void XmlWriter::writeString(const std::string outString) {
-    if (outFile.is_open()) {
-        outFile << ">" << outString;
-    }
-    else {
-        std::cout << "File is closed. Unable to write to file.\n";
+        std::cout << "Error: unable to write to a closed file.\n";
     }
 }
