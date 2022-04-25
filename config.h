@@ -12,7 +12,7 @@ std::vector<std::string> analysis_names = {"Kernel Analysis",
                                            "Cpu Usage Analysis",
                                            "Kernel Memory Usage Analysis",
                                            "Latency Syscall Analysis"};
-std::string requested_times = "[ ]";
-std::string requested_items = "[ ]";
+std::string requested_times = "[0,100000000000]";
+std::string requested_items = "[]";
 
 #endif
